@@ -19,6 +19,8 @@ for reading please input:                   phone name         (example: phone D
             print("This user was not found in the phone book!")
         except ValueError:
             print("Invalid value. Try again.")
+        except TypeError:
+            print("Invalid value. Try again.")
         return result
     return wrapper
 
@@ -33,12 +35,20 @@ def welcome_bot(func):
 @error_handler
 def attach(name: str, number: str):
     if name in CONTACTS_ARRAY.keys():
-        return False
-    CONTACTS_ARRAY[name] = number   
+        return f'Contact with name {name} already in the phone book'
+    CONTACTS_ARRAY[name] = number
+    return f'Contact with name {name} and phone {number} add successful'
    
 
-def change():
-    ...
+def change(*args):
+    name = args[0]
+    phone = args[1]
+    old_phone = CONTACTS_ARRAY.get(name)
+    if old_phone:
+        CONTACTS_ARRAY[name] = phone
+        return f'Phone for contact {name} successful changed'
+    return f'In phone book no contact with name {name}'
+        
 
 # take phone from dict 
 @error_handler
@@ -51,12 +61,14 @@ def get_phone(name: str):
 def show_phone(name: str):
     look_phone = get_phone(name)
     if look_phone: 
-        print(look_phone)
+        return look_phone
     
 
 # read dict with contact
 def reader():
-    array_message = "Your contact list is empty."
+    if not CONTACTS_ARRAY:
+        return "Your contact list is empty."
+    array_message = ''
     for name, number in CONTACTS_ARRAY.items():
         array_message += ('|{:<12}|{:<15}\n'.format(name, number))
     return array_message
@@ -64,15 +76,17 @@ def reader():
 # say good bye and exit
 @error_handler
 def say_good_bye():
-    print("Bye! Bye!")
-    exit()
+    return "Bye! Bye!"
+
+def no_command(*args):
+    return 'Unknown command. Try again'
 
 COMMAND_ARRAY = {
     "hello": lambda: print("May I help you?"),
     "add": attach,
     "change": change,
     "phone": show_phone,
-    "show all": lambda: print(reader()),
+    "show all":reader,
     'exit': say_good_bye,
 	'bye': say_good_bye,
 	'quit': say_good_bye,
@@ -85,15 +99,21 @@ def parser(command):
     for key in COMMAND_ARRAY.keys():
         if command.startswith(key):
             new_line = command[len(key):].title()
-            COMMAND_ARRAY[key](*new_line.split())
-            break
+            return COMMAND_ARRAY[key], new_line.split()
+    return no_command, []
+            
 
 
 @ welcome_bot
 def main():
     while True:
-        command = input("Please enter your command: ").lower().strip()
-        parser(command)
+        user_input = input("Please enter your command: ").lower().strip()
+        command, data = parser(user_input)
+        
+        print(command(*data))
+        
+        if command == say_good_bye:
+            break
 
 if __name__ == "__main__":
     main()
