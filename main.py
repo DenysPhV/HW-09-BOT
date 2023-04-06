@@ -1,12 +1,13 @@
 import functools
+CONTACTS_ARRAY = {}
 
-ARRAY = {}
-
-def input_error(func):
+def error_handler(func):
     @functools.wraps(func)
     def wrapper(*args, **kwargs):
+        result = False
+
         try:
-            return func(*args, **kwargs)
+            result = func(*args, **kwargs)
         except IndexError:
             print("""You have not entered all data!!!
 --------------------------------------------------------------------------------------------------
@@ -18,6 +19,7 @@ for reading please input:                   phone name         (example: phone D
             print("This user was not found in the phone book!")
         except ValueError:
             print("Invalid value. Try again.")
+        return result
     return wrapper
 
 
@@ -27,45 +29,59 @@ def welcome_bot(func):
         return func(*args, **kwargs)
     return inner
 
+@error_handler
+def attach(name: str, number: str):
+    if name in CONTACTS_ARRAY.keys():
+        return "Unknown command, please input correct data or command!"
+    CONTACTS_ARRAY[name] = number   
+   
+   
+def change():
+    ...
 
-@input_error
-def handler(enter_input):
-    if enter_input.lower() == "hello":
-        return "May I help you?"
-    
-    if enter_input.lstrip()[0:3].lower() == "add":
-        ARRAY[enter_input.split(" ")[1]] = enter_input.split(" ")[2]
+def show_phone():
+    ...
 
-    if "change" in enter_input.lower():
-        ARRAY[enter_input.split(" ")[1]] = enter_input.split(" ")[2]
+def reader():
+    array_message = "Your contact list is empty."
+    for name, number in CONTACTS_ARRAY.items():
+        array_message += ('|{:<12}|{:<15}\n'.format(name, number))
+    return array_message
 
-    if "phone" in enter_input.lower():
-        return ARRAY[enter_input.split(" ")[1]]
-    
-    if "show all" in enter_input.lower():
-        if ARRAY == {}:
-            array_message = "Your contact list is empty."
-        else:
-            array_message = "Display contact list book:\n"
-            for k, v in ARRAY.items():
-                array_message += ("|{:<12}| {:<15}\n".format(k, v))
-        return array_message
-    
-    return "Unknown command, please input correct data or command!"
+@error_handler
+def say_good_bye():
+    print("Bye! Bye!")
+    exit()
+
+COMMAND_ARRAY = {
+    "hello": lambda: print("May I help you?"),
+    "add": attach,
+    "change": change,
+    "phone": show_phone,
+    "show all": lambda: print(reader()),
+    'exit': say_good_bye,
+	'bye': say_good_bye,
+	'quit': say_good_bye,
+	'close': say_good_bye,
+	'.': say_good_bye
+}
+
+
+def parser(command):
+    for key in COMMAND_ARRAY.keys():
+        if command.startswith(key):
+            new_line = command[len(key):].title()
+            COMMAND_ARRAY[key](*new_line.split())
+            break
+
+
 
 
 @ welcome_bot
 def main():
     while True:
-        enter_input = input("Please enter your command: ")
-        if enter_input.strip().lower() in [".", "good bye", "close", "exit", "stop"]:
-            print("Bye! Bye!")
-            break
-        else:
-            print_me = handler(enter_input)
-            if print_me != None:
-                print(print_me)
-            continue
+        command = input("Please enter your command: ").lower().strip()
+        parser(command)
 
 if __name__ == "__main__":
     main()
