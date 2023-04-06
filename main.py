@@ -2,13 +2,13 @@ import functools
 CONTACTS_ARRAY = {}
 
 def error_handler(func):
-    # @functools.wraps(func)
+    @functools.wraps(func)
     def wrapper(*args, **kwargs):
         result = False
 
         try:
             result = func(*args, **kwargs)
-        except IndexError:
+        except TypeError:
             print("""You have not entered all data!!!
 --------------------------------------------------------------------------------------------------
 for adding new phone number please input:   add name tel.      (example: add Denys 345-45-45)
@@ -29,16 +29,20 @@ def welcome_bot(func):
         return func(*args, **kwargs)
     return inner
 
-#add name and number in dict -> HELP
+#add name and number in dict
 @error_handler
 def attach(name: str, number: str):
     if name in CONTACTS_ARRAY.keys():
         return False
     CONTACTS_ARRAY[name] = number   
    
+# change number contact
+@error_handler
+def change(name:str, number:str):
+    if name not in COMMAND_ARRAY.keys():
+        raise KeyError
+    COMMAND_ARRAY[name] = number
 
-def change():
-    ...
 
 # take phone from dict 
 @error_handler
@@ -46,7 +50,7 @@ def get_phone(name: str):
     return COMMAND_ARRAY[name]
 
 
-# ask get phone give phone by name -> HELP
+# ask get phone give phone by name
 @error_handler
 def show_phone(name: str):
     look_phone = get_phone(name)
@@ -81,6 +85,7 @@ COMMAND_ARRAY = {
 }
 
 
+@error_handler
 def parser(command):
     for key in COMMAND_ARRAY.keys():
         if command.startswith(key):
@@ -94,6 +99,7 @@ def main():
     while True:
         command = input("Please enter your command: ").lower().strip()
         parser(command)
+
 
 if __name__ == "__main__":
     main()
