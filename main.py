@@ -2,7 +2,7 @@ import functools
 CONTACTS_ARRAY = {}
 
 def error_handler(func):
-    @functools.wraps(func)
+    # @functools.wraps(func)
     def wrapper(*args, **kwargs):
         result = False
 
@@ -29,25 +29,39 @@ def welcome_bot(func):
         return func(*args, **kwargs)
     return inner
 
+#add name and number in dict -> HELP
 @error_handler
 def attach(name: str, number: str):
     if name in CONTACTS_ARRAY.keys():
-        return "Unknown command, please input correct data or command!"
+        return False
     CONTACTS_ARRAY[name] = number   
    
-   
+
 def change():
     ...
 
-def show_phone():
-    ...
+# take phone from dict 
+@error_handler
+def get_phone(name: str):
+    return COMMAND_ARRAY[name]
 
+
+# ask get phone give phone by name -> HELP
+@error_handler
+def show_phone(name: str):
+    look_phone = get_phone(name)
+    if look_phone: 
+        print(look_phone)
+    
+
+# read dict with contact
 def reader():
     array_message = "Your contact list is empty."
     for name, number in CONTACTS_ARRAY.items():
         array_message += ('|{:<12}|{:<15}\n'.format(name, number))
     return array_message
 
+# say good bye and exit
 @error_handler
 def say_good_bye():
     print("Bye! Bye!")
@@ -73,8 +87,6 @@ def parser(command):
             new_line = command[len(key):].title()
             COMMAND_ARRAY[key](*new_line.split())
             break
-
-
 
 
 @ welcome_bot
